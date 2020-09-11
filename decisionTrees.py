@@ -1,6 +1,7 @@
 import csv
 from operator import itemgetter
 from anytree import Node, RenderTree, AnyNode # pip install anytree
+from statistics import mode # get most common values
 
 dataPoints = []
 
@@ -14,7 +15,7 @@ with open(r'data\synthetic-1.csv') as csv_file:
         line_count += 1
     # print(f'Processed {line_count} lines.')
 
-print(dataPoints)
+# print(dataPoints)
 
 def ID3(examples, targetAttribute, attributes):
     thisNode = AnyNode()
@@ -25,10 +26,22 @@ def ID3(examples, targetAttribute, attributes):
     allMatch = False
     if len(examples) > 0:
         allMatch = all(elem[2] == examples[0][2] for elem in examples)
-    print(allMatch)
+    # print(allMatch)
+    if allMatch:
+        thisNode.label = examples[0][2]
+        # if examples[0][2]:
+        #     thisNode.label = True
+        # else:
+        #     thisNode.label = False
+        return thisNode
+    if not attributes: # if there are no more valid attributes
+        thisNode.label = mode(label[2] for label in examples)
+        return thisNode
 
 
-ID3(dataPoints, 'a', 3)
+print(ID3(dataPoints, 'a', []).label)
+
+# print(mode([True, True, False, False, False, False, True]))
 
 # # https://www.tutorialspoint.com/get-first-element-with-maximum-value-in-list-of-tuples-in-python
 # range0 = max(dataPoints, key=itemgetter(0))[0] - min(dataPoints, key=itemgetter(0))[0]
