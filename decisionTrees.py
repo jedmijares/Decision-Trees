@@ -2,63 +2,65 @@ import csv
 from operator import itemgetter
 from anytree import Node, RenderTree, AnyNode # pip install anytree
 from statistics import mode # get most common values
+from math import log2
+# from collections import Counter
 
 dataPoints = []
 
 # https://realpython.com/python-csv/
-with open(r'data\synthetic-1.csv') as csv_file:
+with open(r'data\synthetic-3.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
-    line_count = 0
+    # line_count = 0
     for row in csv_reader:
         # print(f'\t{row[0]} \t {row[1]} \t {row[2]}.')
         dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
-        line_count += 1
+        # line_count += 1
     # print(f'Processed {line_count} lines.')
 
 # print(dataPoints)
 
-def ID3(examples, targetAttribute, attributes):
+def ID3(examples, targetAttribute, availableAttributes):
     thisNode = AnyNode()
-    # for point in examples:
-    #     print(point[2])
 
     # https://thispointer.com/python-check-if-all-elements-in-a-list-are-same-or-matches-a-condition/
     allMatch = False
     if len(examples) > 0:
-        allMatch = all(elem[2] == examples[0][2] for elem in examples)
-    # print(allMatch)
+        allMatch = all(elem[targetAttribute] == examples[0][targetAttribute] for elem in examples)
     if allMatch:
-        thisNode.label = examples[0][2]
-        # if examples[0][2]:
-        #     thisNode.label = True
-        # else:
-        #     thisNode.label = False
+        thisNode.label = examples[0][targetAttribute]
         return thisNode
-    if not attributes: # if there are no more valid attributes
-        thisNode.label = mode(label[2] for label in examples)
+    if not availableAttributes: # if there are no more valid attributes
+        thisNode.label = mode(label[targetAttribute] for label in examples) # set label to most common value
         return thisNode
 
+    entropies = []
+    for attribute in availableAttributes:
+        entropies.insert(attribute, 0)
+    for label in [True, False]:
+        classLabels = [elem[targetAttribute] for elem in examples]
+        proportion = classLabels.count(label)/len(examples)
+        if proportion != 0:
+            # print(entropies)
+            # print(availableAttributes)
+            # print("--------")
+            entropies[attribute] += (-proportion * log2(proportion))
+    bestAttribute = entropies.index(max(entropies))
+    splitValues = [elem[bestAttribute] for elem in examples]
+    thisNode.splitPoint = (max(splitValues)+min(splitValues))/2
+    lowerVals = []
+    higherVals = []
+    for point in examples:
+        if point[bestAttribute] < thisNode.splitPoint:
+            lowerVals.append(point)
+        else:
+            higherVals.append(point)
+    lowerAvailableAttributes = availableAttributes.copy()
+    lowerAvailableAttributes.remove(bestAttribute)
+    higherAvailableAttributes = lowerAvailableAttributes.copy()
+    ID3(lowerVals, targetAttribute, lowerAvailableAttributes)
+    ID3(higherVals, targetAttribute, higherAvailableAttributes)
+        
+    # print(entropies)
+    # print(bestAttribute)
 
-print(ID3(dataPoints, 'a', []).label)
-
-# print(mode([True, True, False, False, False, False, True]))
-
-# # https://www.tutorialspoint.com/get-first-element-with-maximum-value-in-list-of-tuples-in-python
-# range0 = max(dataPoints, key=itemgetter(0))[0] - min(dataPoints, key=itemgetter(0))[0]
-# range1 = max(dataPoints, key=itemgetter(1))[1] - min(dataPoints, key=itemgetter(1))[1]
-
-# print(range0)
-# print(range1)
-
-# discriminationRange = -1
-# if range0 > range1:
-#     discriminationRange = 0
-# else:
-#     discriminationRange = 1
-
-# depth1 = Node((discriminationRange, range0))
-
-# for pre, fill, node in RenderTree(depth1):
-#     print("%s%s" % (pre, node.name))
-
-# print(depth1)
+ID3(dataPoints, 2, [0, 1])
