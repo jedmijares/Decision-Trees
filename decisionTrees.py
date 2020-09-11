@@ -57,10 +57,13 @@ def ID3(examples, targetAttribute, availableAttributes):
     lowerAvailableAttributes = availableAttributes.copy()
     lowerAvailableAttributes.remove(bestAttribute)
     higherAvailableAttributes = lowerAvailableAttributes.copy()
-    ID3(lowerVals, targetAttribute, lowerAvailableAttributes)
-    ID3(higherVals, targetAttribute, higherAvailableAttributes)
-        
+    lowerNode = ID3(lowerVals, targetAttribute, lowerAvailableAttributes)
+    higherNode = ID3(higherVals, targetAttribute, higherAvailableAttributes)
+    lowerNode.parent = thisNode
+    higherNode.parent = thisNode
+    return thisNode
+
     # print(entropies)
     # print(bestAttribute)
 
-ID3(dataPoints, 2, [0, 1])
+print(RenderTree(ID3(dataPoints, 2, [0, 1]))) 
