@@ -1,5 +1,6 @@
 import csv
 from operator import itemgetter
+from anytree import Node, RenderTree, AnyNode # pip install anytree
 
 dataPoints = []
 
@@ -15,9 +16,36 @@ with open(r'data\synthetic-1.csv') as csv_file:
 
 print(dataPoints)
 
-# https://www.tutorialspoint.com/get-first-element-with-maximum-value-in-list-of-tuples-in-python
-range0 = max(dataPoints, key=itemgetter(0))[0] - min(dataPoints, key=itemgetter(0))[0]
-range1 = max(dataPoints, key=itemgetter(1))[1] - min(dataPoints, key=itemgetter(1))[1]
+def ID3(examples, targetAttribute, attributes):
+    thisNode = AnyNode()
+    # for point in examples:
+    #     print(point[2])
 
-print(range0)
-print(range1)
+    # https://thispointer.com/python-check-if-all-elements-in-a-list-are-same-or-matches-a-condition/
+    allMatch = False
+    if len(examples) > 0:
+        allMatch = all(elem[2] == examples[0][2] for elem in examples)
+    print(allMatch)
+
+
+ID3(dataPoints, 'a', 3)
+
+# # https://www.tutorialspoint.com/get-first-element-with-maximum-value-in-list-of-tuples-in-python
+# range0 = max(dataPoints, key=itemgetter(0))[0] - min(dataPoints, key=itemgetter(0))[0]
+# range1 = max(dataPoints, key=itemgetter(1))[1] - min(dataPoints, key=itemgetter(1))[1]
+
+# print(range0)
+# print(range1)
+
+# discriminationRange = -1
+# if range0 > range1:
+#     discriminationRange = 0
+# else:
+#     discriminationRange = 1
+
+# depth1 = Node((discriminationRange, range0))
+
+# for pre, fill, node in RenderTree(depth1):
+#     print("%s%s" % (pre, node.name))
+
+# print(depth1)
