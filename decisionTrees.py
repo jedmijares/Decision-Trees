@@ -66,4 +66,22 @@ def ID3(examples, targetAttribute, availableAttributes):
     # print(entropies)
     # print(bestAttribute)
 
-print(RenderTree(ID3(dataPoints, 2, [0, 1]))) 
+# print(RenderTree(ID3(dataPoints, 2, [0, 1]))) 
+
+import sys; print(sys.executable)
+
+import numpy as np # pip install numpy
+import matplotlib.pyplot as plt # python -m pip install -U matplotlib
+
+# Fixing random state for reproducibility
+np.random.seed(19680801)
+
+
+N = 50
+x = np.random.rand(N)
+y = np.random.rand(N)
+colors = np.random.rand(N)
+area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
+
+plt.scatter(x, y, c=colors)
+plt.show()
