@@ -3,6 +3,7 @@ from operator import itemgetter
 from anytree import Node, RenderTree, AnyNode # pip install anytree
 from statistics import mode # get most common values
 from math import log2
+import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 
 dataPoints = []
@@ -20,6 +21,10 @@ with open(r'data\synthetic-4.csv') as csv_file:
 
 def ID3(examples, targetAttribute, availableAttributes):
     thisNode = AnyNode()
+    thisNode.values = [float('-inf'), float('inf')]
+    thisNode.label = None
+
+    # handle base cases
 
     # https://thispointer.com/python-check-if-all-elements-in-a-list-are-same-or-matches-a-condition/
     allMatch = False
@@ -32,6 +37,7 @@ def ID3(examples, targetAttribute, availableAttributes):
         thisNode.label = mode(label[targetAttribute] for label in examples) # set label to most common value
         return thisNode
 
+    # calculate entropy and find best attribute to split on
     entropies = []
     for attribute in availableAttributes:
         entropies.insert(attribute, 0)
@@ -39,17 +45,16 @@ def ID3(examples, targetAttribute, availableAttributes):
         classLabels = [elem[targetAttribute] for elem in examples]
         proportion = classLabels.count(label)/len(examples)
         if proportion != 0:
-            # print(entropies)
-            # print(availableAttributes)
-            # print("--------")
             entropies[attribute] += (-proportion * log2(proportion))
     bestAttribute = entropies.index(max(entropies))
+
+    thisNode.feature = bestAttribute
     splitValues = [elem[bestAttribute] for elem in examples]
-    thisNode.splitPoint = (max(splitValues)+min(splitValues))/2
+    splitPoint = (max(splitValues)+min(splitValues))/2
     lowerVals = []
     higherVals = []
     for point in examples:
-        if point[bestAttribute] < thisNode.splitPoint:
+        if point[bestAttribute] < splitPoint:
             lowerVals.append(point)
         else:
             higherVals.append(point)
@@ -58,18 +63,25 @@ def ID3(examples, targetAttribute, availableAttributes):
     higherAvailableAttributes = lowerAvailableAttributes.copy()
     lowerNode = ID3(lowerVals, targetAttribute, lowerAvailableAttributes)
     higherNode = ID3(higherVals, targetAttribute, higherAvailableAttributes)
+    lowerNode.values = [float('-inf'), splitPoint]
     lowerNode.parent = thisNode
+    higherNode.values = [splitPoint, float('inf')]
     higherNode.parent = thisNode
     return thisNode
 
-    # print(entropies)
-    # print(bestAttribute)
-
-def predict(rootNode):
+def predict(rootNode, point):
+    for child in rootNode.children:
+        if( child.values[0] <= point[rootNode.feature] <= child.values[1]):
+            if(child.label != None):
+                return child.label
+            return predict(child, point)
     pass
 
 root = ID3(dataPoints, 2, [0, 1])
 print(RenderTree(root)) 
+print(predict(root, (1,0)))
+# print(RenderTree(root)) 
+# print(root.children)
 
 
 
