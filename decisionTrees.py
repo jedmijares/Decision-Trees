@@ -75,15 +75,50 @@ def predict(rootNode, point):
             if(child.label != None):
                 return child.label
             return predict(child, point)
-    pass
 
 root = ID3(dataPoints, 2, [0, 1])
-print(RenderTree(root)) 
-print(predict(root, (1,0)))
+# print(RenderTree(root)) 
+# print(predict(root, (1,0)))
 # print(RenderTree(root)) 
 # print(root.children)
 
+x = [elem[0] for elem in dataPoints]
+x_min = min(x)
+x_max = max(x)
+y = [elem[1] for elem in dataPoints]
+y_min = min(y)
+y_max = max(y)
+# x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+# y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+plot_step = 0.2
+xx, yy = np.meshgrid(np.arange(x_min, x_max, plot_step), np.arange(y_min, y_max, plot_step))
+plt.tight_layout(h_pad=0.5, w_pad=0.5, pad=2.5)
 
+Z = []
+for pair in np.c_[xx.ravel(), yy.ravel()]:
+    Z.append(predict(root, (pair[0], pair[1])))
+Z = np.asarray(Z)
+Z = Z.reshape(xx.shape)
+
+# Z = np.array()
+# for i in range(len(xx)):
+#     Z.insert(predict(root, (xx[i], yy[i])))
+# Z = np.asarray(Z)
+
+
+
+# Z = np.array([])
+# for index1 in range(xx.shape[0]):
+#     for index2 in range(xx.shape[1]):
+#         Z[index1][index2] = predict(root, (xx[index1][index2], yy[index1][index2]))
+
+    # Z = predict(root, (xx , yy[index]))
+# Z = predict(root, np.c_[xx.ravel(), yy.ravel()])
+# Z = Z.reshape(xx.shape)
+plt.contourf(xx, yy, Z, cmap=plt.cm.RdYlBu)
+
+# print(xx.shape)
+# print(yy.shape)
 
 # # N = 50
 # x = [elem[0] for elem in dataPoints]
@@ -91,4 +126,4 @@ print(predict(root, (1,0)))
 # colors = [elem[2] for elem in dataPoints]
 
 # plt.scatter(x, y, c = colors)
-# plt.show()
+plt.show()
