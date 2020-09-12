@@ -3,18 +3,17 @@ from operator import itemgetter
 from anytree import Node, RenderTree, AnyNode # pip install anytree
 from statistics import mode # get most common values
 from math import log2
-# from collections import Counter
+import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 
 dataPoints = []
 
 # https://realpython.com/python-csv/
-with open(r'data\synthetic-3.csv') as csv_file:
+with open(r'data\synthetic-4.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
-    # line_count = 0
+    # ncol = len(next(csv_reader)) # Read first line and count columns
+    # csv_file.seek(0)              # go back to beginning of file
     for row in csv_reader:
-        # print(f'\t{row[0]} \t {row[1]} \t {row[2]}.')
         dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
-        # line_count += 1
     # print(f'Processed {line_count} lines.')
 
 # print(dataPoints)
@@ -66,22 +65,18 @@ def ID3(examples, targetAttribute, availableAttributes):
     # print(entropies)
     # print(bestAttribute)
 
-# print(RenderTree(ID3(dataPoints, 2, [0, 1]))) 
+def predict(rootNode):
+    pass
 
-import sys; print(sys.executable)
-
-import numpy as np # pip install numpy
-import matplotlib.pyplot as plt # python -m pip install -U matplotlib
-
-# Fixing random state for reproducibility
-np.random.seed(19680801)
+root = ID3(dataPoints, 2, [0, 1])
+print(RenderTree(root)) 
 
 
-N = 50
-x = np.random.rand(N)
-y = np.random.rand(N)
-colors = np.random.rand(N)
-area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
 
-plt.scatter(x, y, c=colors)
-plt.show()
+# # N = 50
+# x = [elem[0] for elem in dataPoints]
+# y = [elem[1] for elem in dataPoints]
+# colors = [elem[2] for elem in dataPoints]
+
+# plt.scatter(x, y, c = colors)
+# plt.show()
