@@ -8,23 +8,25 @@ import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 
 
 dataPoints = []
-
 # https://realpython.com/python-csv/
-with open(r'data\synthetic-1.csv') as csv_file:
+with open(r'data\synthetic-3.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     # ncol = len(next(csv_reader)) # Read first line and count columns
     # csv_file.seek(0)              # go back to beginning of file
     for row in csv_reader:
         dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
 
+# https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
-def ID3(examples, targetAttribute, availableAttributes):
+def ID3(examples, targetAttribute, availableAttributes, binCount = 4):
     thisNode = AnyNode()
     thisNode.values = [float('-inf'), float('inf')]
     thisNode.label = None
 
     # handle base cases
-
     # https://thispointer.com/python-check-if-all-elements-in-a-list-are-same-or-matches-a-condition/
     allMatch = False
     if len(examples) > 0:
@@ -46,26 +48,39 @@ def ID3(examples, targetAttribute, availableAttributes):
         if proportion != 0:
             entropies[attribute] += (-proportion * log2(proportion))
     bestAttribute = entropies.index(max(entropies))
-
     thisNode.feature = bestAttribute
-    splitValues = [elem[bestAttribute] for elem in examples]
-    splitPoint = (max(splitValues)+min(splitValues))/2
-    lowerVals = []
-    higherVals = []
-    for point in examples:
-        if point[bestAttribute] < splitPoint:
-            lowerVals.append(point)
-        else:
-            higherVals.append(point)
-    lowerAvailableAttributes = availableAttributes.copy()
-    lowerAvailableAttributes.remove(bestAttribute)
-    higherAvailableAttributes = lowerAvailableAttributes.copy()
-    lowerNode = ID3(lowerVals, targetAttribute, lowerAvailableAttributes)
-    higherNode = ID3(higherVals, targetAttribute, higherAvailableAttributes)
-    lowerNode.values = [float('-inf'), splitPoint]
-    lowerNode.parent = thisNode
-    higherNode.values = [splitPoint, float('inf')]
-    higherNode.parent = thisNode
+
+    # place examples in bins
+
+    examples.sort(key = lambda x: x[bestAttribute])
+    minimum = float('-inf')
+    for bin in list(split(examples, binCount)):
+        newAvailableAttributes = availableAttributes.copy()
+        newAvailableAttributes.remove(bestAttribute)
+        newNode = ID3(bin, targetAttribute, newAvailableAttributes)
+        newNode.parent = thisNode
+        newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
+        minimum = newNode.values[1]
+    # splitValues = [elem[bestAttribute] for elem in examples]
+    # splitPoint = (max(splitValues)+min(splitValues))/2
+    # lowerVals = []
+    # higherVals = []
+    # for point in examples:
+    #     if point[bestAttribute] < splitPoint:
+    #         lowerVals.append(point)
+    #     else:
+    #         higherVals.append(point)
+
+    # recurse for each bin
+    # lowerAvailableAttributes = availableAttributes.copy()
+    # lowerAvailableAttributes.remove(bestAttribute)
+    # higherAvailableAttributes = lowerAvailableAttributes.copy()
+    # lowerNode = ID3(lowerVals, targetAttribute, lowerAvailableAttributes)
+    # higherNode = ID3(higherVals, targetAttribute, higherAvailableAttributes)
+    # lowerNode.values = [float('-inf'), splitPoint]
+    # lowerNode.parent = thisNode
+    # higherNode.values = [splitPoint, float('inf')]
+    # higherNode.parent = thisNode
     return thisNode
 
 def predict(rootNode, point):
@@ -80,7 +95,6 @@ print(RenderTree(root))
 
 x = [elem[0] for elem in dataPoints]
 y = [elem[1] for elem in dataPoints]
-# colors = [elem[2] for elem in dataPoints]
 classLabels = [elem[2] for elem in dataPoints]
 colors = []
 for i in range(len(classLabels)):
