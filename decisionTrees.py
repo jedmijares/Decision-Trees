@@ -6,16 +6,6 @@ from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 
-
-dataPoints = []
-# https://realpython.com/python-csv/
-with open(r'data\synthetic-4.csv') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    # ncol = len(next(csv_reader)) # Read first line and count columns
-    # csv_file.seek(0)              # go back to beginning of file
-    for row in csv_reader:
-        dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
-
 # https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
 def split(a, n):
     k, m = divmod(len(a), n)
@@ -71,36 +61,56 @@ def predict(rootNode, point):
                 return child.label
             return predict(child, point)
 
+def plot(points):
+    x = [elem[0] for elem in points]
+    y = [elem[1] for elem in points]
+    classLabels = [elem[2] for elem in points]
+    colors = []
+    for i in range(len(classLabels)):
+        if classLabels[i]:
+            colors.append('b')
+        else:
+            colors.append('r')
+
+    x = [elem[0] for elem in points]
+    x_min = min(x) - 1
+    x_max = max(x) + 1
+    y = [elem[1] for elem in points]
+    y_min = min(y) - 1
+    y_max = max(y) + 1
+    plot_step = 0.2
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, plot_step), np.arange(y_min, y_max, plot_step))
+    plt.tight_layout(h_pad=0.5, w_pad=0.5, pad=2.5)
+
+    Z = []
+    for pair in np.c_[xx.ravel(), yy.ravel()]:
+        Z.append(predict(root, (pair[0], pair[1])))
+    Z = np.asarray(Z)
+    Z = Z.reshape(xx.shape)
+
+    plt.contourf(xx, yy, Z, cmap=plt.cm.RdBu)
+
+    plt.scatter(x, y, c = colors)
+    plt.show()
+
+dataPoints = []
+# https://realpython.com/python-csv/
+with open(r'data\synthetic-1.csv') as csv_file:
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    # ncol = len(next(csv_reader)) # Read first line and count columns
+    # csv_file.seek(0)              # go back to beginning of file
+    for row in csv_reader:
+        dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
+
 root = ID3(dataPoints, 2, [0, 1])
-print(RenderTree(root)) 
+print(RenderTree(root))
+plot(dataPoints)
 
-x = [elem[0] for elem in dataPoints]
-y = [elem[1] for elem in dataPoints]
-classLabels = [elem[2] for elem in dataPoints]
-colors = []
-for i in range(len(classLabels)):
-    if classLabels[i]:
-        colors.append('b')
-    else:
-        colors.append('r')
-
-x = [elem[0] for elem in dataPoints]
-x_min = min(x) - 1
-x_max = max(x) + 1
-y = [elem[1] for elem in dataPoints]
-y_min = min(y) - 1
-y_max = max(y) + 1
-plot_step = 0.2
-xx, yy = np.meshgrid(np.arange(x_min, x_max, plot_step), np.arange(y_min, y_max, plot_step))
-plt.tight_layout(h_pad=0.5, w_pad=0.5, pad=2.5)
-
-Z = []
-for pair in np.c_[xx.ravel(), yy.ravel()]:
-    Z.append(predict(root, (pair[0], pair[1])))
-Z = np.asarray(Z)
-Z = Z.reshape(xx.shape)
-
-plt.contourf(xx, yy, Z, cmap=plt.cm.RdBu)
-
-plt.scatter(x, y, c = colors)
-plt.show()
+# check accuracy
+correct = 0
+total = 0
+for point in dataPoints:
+    if predict(root, (point[0], point[1])) == point[2]:
+        correct += 1
+    total += 1
+print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
