@@ -6,6 +6,7 @@ from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 
+
 dataPoints = []
 
 # https://realpython.com/python-csv/
@@ -78,6 +79,17 @@ root = ID3(dataPoints, 2, [0, 1])
 print(RenderTree(root)) 
 
 x = [elem[0] for elem in dataPoints]
+y = [elem[1] for elem in dataPoints]
+# colors = [elem[2] for elem in dataPoints]
+classLabels = [elem[2] for elem in dataPoints]
+colors = []
+for i in range(len(classLabels)):
+    if classLabels[i]:
+        colors.append('b')
+    else:
+        colors.append('r')
+
+x = [elem[0] for elem in dataPoints]
 x_min = min(x) - 1
 x_max = max(x) + 1
 y = [elem[1] for elem in dataPoints]
@@ -93,11 +105,7 @@ for pair in np.c_[xx.ravel(), yy.ravel()]:
 Z = np.asarray(Z)
 Z = Z.reshape(xx.shape)
 
-plt.contourf(xx, yy, Z)
-
-x = [elem[0] for elem in dataPoints]
-y = [elem[1] for elem in dataPoints]
-colors = [elem[2] for elem in dataPoints]
+plt.contourf(xx, yy, Z, cmap=plt.cm.RdBu)
 
 plt.scatter(x, y, c = colors)
 plt.show()
