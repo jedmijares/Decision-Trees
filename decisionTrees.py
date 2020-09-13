@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 
 dataPoints = []
 # https://realpython.com/python-csv/
-with open(r'data\synthetic-3.csv') as csv_file:
+with open(r'data\synthetic-4.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     # ncol = len(next(csv_reader)) # Read first line and count columns
     # csv_file.seek(0)              # go back to beginning of file
@@ -21,7 +21,7 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
-def ID3(examples, targetAttribute, availableAttributes, binCount = 4):
+def ID3(examples, targetAttribute, availableAttributes, binCount = 8):
     thisNode = AnyNode()
     thisNode.values = [float('-inf'), float('inf')]
     thisNode.label = None
@@ -56,7 +56,7 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 4):
     for bin in list(split(examples, binCount)):
         newAvailableAttributes = availableAttributes.copy()
         newAvailableAttributes.remove(bestAttribute)
-        newNode = ID3(bin, targetAttribute, newAvailableAttributes)
+        newNode = ID3(bin, targetAttribute, newAvailableAttributes, binCount)
         newNode.parent = thisNode
         newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
         minimum = newNode.values[1]
