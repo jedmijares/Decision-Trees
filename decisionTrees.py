@@ -61,6 +61,8 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 4):
         newNode.parent = thisNode
         newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
         minimum = newNode.values[1]
+        if max(bin, key = lambda x: x[bestAttribute])[bestAttribute] == max(examples, key = lambda x: x[bestAttribute])[bestAttribute]:
+            newNode.values[1] = float('inf')
     # splitValues = [elem[bestAttribute] for elem in examples]
     # splitPoint = (max(splitValues)+min(splitValues))/2
     # lowerVals = []
