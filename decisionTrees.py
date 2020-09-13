@@ -50,8 +50,7 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 4):
     bestAttribute = entropies.index(max(entropies))
     thisNode.feature = bestAttribute
 
-    # place examples in bins
-
+    # place examples in bins and recurse
     examples.sort(key = lambda x: x[bestAttribute])
     minimum = float('-inf')
     for bin in list(split(examples, binCount)):
@@ -63,26 +62,6 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 4):
         minimum = newNode.values[1]
         if max(bin, key = lambda x: x[bestAttribute])[bestAttribute] == max(examples, key = lambda x: x[bestAttribute])[bestAttribute]:
             newNode.values[1] = float('inf')
-    # splitValues = [elem[bestAttribute] for elem in examples]
-    # splitPoint = (max(splitValues)+min(splitValues))/2
-    # lowerVals = []
-    # higherVals = []
-    # for point in examples:
-    #     if point[bestAttribute] < splitPoint:
-    #         lowerVals.append(point)
-    #     else:
-    #         higherVals.append(point)
-
-    # recurse for each bin
-    # lowerAvailableAttributes = availableAttributes.copy()
-    # lowerAvailableAttributes.remove(bestAttribute)
-    # higherAvailableAttributes = lowerAvailableAttributes.copy()
-    # lowerNode = ID3(lowerVals, targetAttribute, lowerAvailableAttributes)
-    # higherNode = ID3(higherVals, targetAttribute, higherAvailableAttributes)
-    # lowerNode.values = [float('-inf'), splitPoint]
-    # lowerNode.parent = thisNode
-    # higherNode.values = [splitPoint, float('inf')]
-    # higherNode.parent = thisNode
     return thisNode
 
 def predict(rootNode, point):
