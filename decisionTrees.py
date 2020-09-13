@@ -64,24 +64,13 @@ def predict(rootNode, point):
 def plot(points):
     x = [elem[0] for elem in points]
     y = [elem[1] for elem in points]
-    classLabels = [elem[2] for elem in points]
-    colors = []
-    for i in range(len(classLabels)):
-        if classLabels[i]:
-            colors.append('b')
-        else:
-            colors.append('r')
-
-    x = [elem[0] for elem in points]
     x_min = min(x) - 1
     x_max = max(x) + 1
-    y = [elem[1] for elem in points]
     y_min = min(y) - 1
     y_max = max(y) + 1
-    plot_step = 0.2
+    plot_step = 0.05
     xx, yy = np.meshgrid(np.arange(x_min, x_max, plot_step), np.arange(y_min, y_max, plot_step))
     plt.tight_layout(h_pad=0.5, w_pad=0.5, pad=2.5)
-
     Z = []
     for pair in np.c_[xx.ravel(), yy.ravel()]:
         Z.append(predict(root, (pair[0], pair[1])))
@@ -89,7 +78,13 @@ def plot(points):
     Z = Z.reshape(xx.shape)
 
     plt.contourf(xx, yy, Z, cmap=plt.cm.RdBu)
-
+    classLabels = [elem[2] for elem in points]
+    colors = []
+    for i in range(len(classLabels)):
+        if classLabels[i]:
+            colors.append('b')
+        else:
+            colors.append('r')
     plt.scatter(x, y, c = colors)
     plt.show()
 
@@ -103,7 +98,7 @@ with open(r'data\synthetic-1.csv') as csv_file:
         dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
 
 root = ID3(dataPoints, 2, [0, 1])
-print(RenderTree(root))
+# print(RenderTree(root))
 plot(dataPoints)
 
 # check accuracy
