@@ -5,6 +5,7 @@ from statistics import mode # get most common values
 from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
+import pandas as pd # pip install pandas
 
 # https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
 def split(a, n):
@@ -88,15 +89,33 @@ def plot(points):
     plt.scatter(x, y, c = colors)
     plt.show()
 
-dataPoints = []
-# https://realpython.com/python-csv/
-with open(r'data\synthetic-1.csv') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    # ncol = len(next(csv_reader)) # Read first line and count columns
-    # csv_file.seek(0)              # go back to beginning of file
-    for row in csv_reader:
-        dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
+def readData(filename):
+    dataPoints = []
+    # https://realpython.com/python-csv/
+    with open(filename) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        # ncol = len(next(csv_reader)) # Read first line and count columns
+        # csv_file.seek(0)              # go back to beginning of file
+        for row in csv_reader:
+            dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
+    return dataPoints
 
+def readPokemon(stats, legendary):
+    statData = pd.read_csv(stats)
+    legendaryLabel = pd.read_csv(legendary)
+    # dataPoints = []
+    # https://realpython.com/python-csv/
+    # with open(filename) as csv_file:
+    #     csv_reader = csv.reader(csv_file, delimiter=',')
+    #     features = next(csv_reader) 
+    #     # csv_file.seek(0)              # go back to beginning of file
+    #     for row in csv_reader:
+    #         dataPoints.append((int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4]), int(row[5]), int(row[6])))
+    return dataPoints, features
+
+# dataPoints, features = readPokemon(r'data\pokemonStats.csv', r'data\pokemonLegendary.csv')
+# print(dataPoints)
+dataPoints = readData(r'data/synthetic-4.csv')
 root = ID3(dataPoints, 2, [0, 1])
 # print(RenderTree(root))
 plot(dataPoints)
