@@ -1,11 +1,18 @@
 import csv
 from operator import itemgetter
-from anytree import Node, RenderTree, AnyNode # pip install anytree
+# from anytree import Node, RenderTree, AnyNode # pip install anytree
 from statistics import mode # get most common values
 from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 import pandas as pd # pip install pandas
+
+class MyNode:
+    def __init__(self):
+        self.values = [float('-inf'), float('inf')]
+        self.label = None
+        self.children = []
+        self.feature = None
 
 # https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
 def split(a, n):
@@ -13,9 +20,10 @@ def split(a, n):
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
 def ID3(examples, targetAttribute, availableAttributes, binCount = 8):
-    thisNode = AnyNode()
-    thisNode.values = [float('-inf'), float('inf')]
-    thisNode.label = None
+    # thisNode = AnyNode()
+    # thisNode.values = [float('-inf'), float('inf')]
+    # thisNode.label = None
+    thisNode = MyNode()
 
     # handle base cases
     # https://thispointer.com/python-check-if-all-elements-in-a-list-are-same-or-matches-a-condition/
@@ -48,7 +56,8 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 8):
         newAvailableAttributes = availableAttributes.copy()
         newAvailableAttributes.remove(bestAttribute)
         newNode = ID3(bin, targetAttribute, newAvailableAttributes, binCount)
-        newNode.parent = thisNode
+        # newNode.parent = thisNode
+        thisNode.children.append(newNode)
         newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
         minimum = newNode.values[1]
         if max(bin, key = lambda x: x[bestAttribute])[bestAttribute] == max(examples, key = lambda x: x[bestAttribute])[bestAttribute]:
@@ -100,24 +109,33 @@ def readData(filename):
             dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
     return dataPoints
 
-def readPokemon(stats, legendary):
-    statData = pd.read_csv(stats)
-    legendaryLabel = pd.read_csv(legendary)
-    # dataPoints = []
-    # https://realpython.com/python-csv/
-    # with open(filename) as csv_file:
-    #     csv_reader = csv.reader(csv_file, delimiter=',')
-    #     features = next(csv_reader) 
-    #     # csv_file.seek(0)              # go back to beginning of file
-    #     for row in csv_reader:
-    #         dataPoints.append((int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4]), int(row[5]), int(row[6])))
-    return dataPoints, features
+# def readPokemon(stats, legendary):
+#     statData = pd.read_csv(stats)
+#     legendaryLabel = pd.read_csv(legendary)
+#     # dataPoints = []
+#     # https://realpython.com/python-csv/
+#     # with open(filename) as csv_file:
+#     #     csv_reader = csv.reader(csv_file, delimiter=',')
+#     #     features = next(csv_reader) 
+#     #     # csv_file.seek(0)              # go back to beginning of file
+#     #     for row in csv_reader:
+#     #         dataPoints.append((int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4]), int(row[5]), int(row[6])))
+#     return dataPoints, features
 
 # dataPoints, features = readPokemon(r'data\pokemonStats.csv', r'data\pokemonLegendary.csv')
 # print(dataPoints)
 dataPoints = readData(r'data/synthetic-4.csv')
 root = ID3(dataPoints, 2, [0, 1])
 # print(RenderTree(root))
+# print(root.values)
+# print(root.feature)
+# print(root.label)
+# print("---------")
+# for child in root.children:
+#     print(child.values)
+#     print(child.feature)
+#     print(child.label)
+#     print("---------")
 plot(dataPoints)
 
 # check accuracy
