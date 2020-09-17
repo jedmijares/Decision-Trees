@@ -124,19 +124,9 @@ def readData(filename):
 
 # dataPoints, features = readPokemon(r'data\pokemonStats.csv', r'data\pokemonLegendary.csv')
 # print(dataPoints)
-dataPoints = readData(r'data/synthetic-4.csv')
+dataPoints = readData(r'data/synthetic-1.csv')
 root = ID3(dataPoints, 2, [0, 1])
-# print(RenderTree(root))
-# print(root.values)
-# print(root.feature)
-# print(root.label)
-# print("---------")
-# for child in root.children:
-#     print(child.values)
-#     print(child.feature)
-#     print(child.label)
-#     print("---------")
-plot(dataPoints)
+# plot(dataPoints)
 
 # check accuracy
 correct = 0
