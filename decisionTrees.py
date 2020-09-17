@@ -106,7 +106,18 @@ def readData(filename):
         # ncol = len(next(csv_reader)) # Read first line and count columns
         # csv_file.seek(0)              # go back to beginning of file
         for row in csv_reader:
-            dataPoints.append((float(row[0]), float(row[1]), bool(int(row[2]))))
+            # print(row)
+            newPoint = row
+            for i in range(len(newPoint)):
+                if (newPoint[i] == '0'):
+                    newPoint[i] = False
+                elif (newPoint[i] == '1'):
+                    newPoint[i] = True
+                else:
+                    newPoint[i] = float(newPoint[i])
+            newPoint = tuple(newPoint)
+            dataPoints.append(newPoint)
+    print(dataPoints)
     return dataPoints
 
 # def readPokemon(stats, legendary):
@@ -126,7 +137,7 @@ def readData(filename):
 # print(dataPoints)
 dataPoints = readData(r'data/synthetic-1.csv')
 root = ID3(dataPoints, 2, [0, 1])
-# plot(dataPoints)
+plot(dataPoints)
 
 # check accuracy
 correct = 0
