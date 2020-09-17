@@ -103,15 +103,15 @@ def readData(filename):
     # https://realpython.com/python-csv/
     with open(filename) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
-        # ncol = len(next(csv_reader)) # Read first line and count columns
+        ncol = len(next(csv_reader)) # Read first line and count columns
         # csv_file.seek(0)              # go back to beginning of file
         for row in csv_reader:
             # print(row)
             newPoint = row
             for i in range(len(newPoint)):
-                if (newPoint[i] == '0'):
+                if (newPoint[i] == '0') | (newPoint[i] == 'FALSE'):
                     newPoint[i] = False
-                elif (newPoint[i] == '1'):
+                elif (newPoint[i] == '1') | (newPoint[i] == 'TRUE'):
                     newPoint[i] = True
                 else:
                     newPoint[i] = float(newPoint[i])
@@ -135,15 +135,32 @@ def readData(filename):
 
 # dataPoints, features = readPokemon(r'data\pokemonStats.csv', r'data\pokemonLegendary.csv')
 # print(dataPoints)
-dataPoints = readData(r'data/synthetic-1.csv')
-root = ID3(dataPoints, 2, [0, 1])
-plot(dataPoints)
+
+# dataPoints = readData(r'data/synthetic-1.csv')
+dataPoints = readData(r'data/pokemonAppended.csv')
+root = ID3(dataPoints, len(dataPoints[0]) - 1, [0, 1], 5)
+# plot(dataPoints)
+
+# # print(RenderTree(root))
+# print(root.values)
+# print(root.feature)
+# print(root.label)
+# # print("---------")
+# for child in root.children:
+#     print("-", child.values)
+#     print("-", child.feature)
+#     print("-", child.label)
+#     # print("---------")
+#     for kiddo in child.children:
+#         print("--", kiddo.values)
+#         print("--", kiddo.feature)
+#         print("--", kiddo.label)
 
 # check accuracy
 correct = 0
 total = 0
 for point in dataPoints:
-    if predict(root, (point[0], point[1])) == point[2]:
+    if predict(root, (point[0], point[1])) == point[len(dataPoints[0]) - 1]:
         correct += 1
     total += 1
 print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
