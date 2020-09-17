@@ -100,12 +100,14 @@ def plot(points):
     plt.scatter(x, y, c = colors)
     plt.show()
 
-def readData(filename):
+def readData(filename, hasHeader = False):
     dataPoints = []
     # https://realpython.com/python-csv/
     with open(filename) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
-        ncol = len(next(csv_reader)) # Read first line and count columns
+        # ncol = len(next(csv_reader)) # Read first line and count columns
+        if(hasHeader):
+            features = next(csv_reader)
         # csv_file.seek(0)              # go back to beginning of file
         for row in csv_reader:
             # print(row)
@@ -119,7 +121,9 @@ def readData(filename):
                     newPoint[i] = float(newPoint[i])
             newPoint = tuple(newPoint)
             dataPoints.append(newPoint)
-    print(dataPoints)
+    # print(dataPoints)
+    if hasHeader:
+        return dataPoints, features
     return dataPoints
 
 # def readPokemon(stats, legendary):
@@ -138,25 +142,27 @@ def readData(filename):
 # dataPoints, features = readPokemon(r'data\pokemonStats.csv', r'data\pokemonLegendary.csv')
 # print(dataPoints)
 
-# dataPoints = readData(r'data/synthetic-1.csv')
-dataPoints = readData(r'data/pokemonAppended.csv')
-root = ID3(dataPoints, len(dataPoints[0]) - 1, [0, 1, 2, 3, 4, 5], 4)
+# print(list(range(4)))
+
+dataPoints = readData(r'data/synthetic-1.csv')
+# dataPoints, features = readData(r'data/pokemonAppended.csv', True)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 2)
 # plot(dataPoints)
 
-# # print(RenderTree(root))
-# print(root.values)
-# print(root.feature)
-# print(root.label)
-# # print("---------")
-# for child in root.children:
-#     print("-", child.values)
-#     print("-", child.feature)
-#     print("-", child.label)
-#     # print("---------")
-#     for kiddo in child.children:
-#         print("--", kiddo.values)
-#         print("--", kiddo.feature)
-#         print("--", kiddo.label)
+# print(RenderTree(root))
+print(root.values)
+print(root.feature)
+print(root.label)
+# print("---------")
+for child in root.children:
+    print("-", child.values)
+    print("-", child.feature)
+    print("-", child.label)
+    # print("---------")
+    for kiddo in child.children:
+        print("--", kiddo.values)
+        print("--", kiddo.feature)
+        print("--", kiddo.label)
 
 # check accuracy
 correct = 0
