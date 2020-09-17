@@ -19,7 +19,7 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
-def ID3(examples, targetAttribute, availableAttributes, binCount = 8):
+def ID3(examples, targetAttribute, availableAttributes, binCount = 8, currentDepth = 0):
     # thisNode = AnyNode()
     # thisNode.values = [float('-inf'), float('inf')]
     # thisNode.label = None
@@ -30,10 +30,12 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 8):
     allMatch = False
     if len(examples) > 0:
         allMatch = all(elem[targetAttribute] == examples[0][targetAttribute] for elem in examples)
+    else: # examples is empty
+        return thisNode
     if allMatch:
         thisNode.label = examples[0][targetAttribute]
         return thisNode
-    if not availableAttributes: # if there are no more valid attributes
+    if (not availableAttributes) | (currentDepth >= 3): # if there are no more valid attributes
         thisNode.label = mode(label[targetAttribute] for label in examples) # set label to most common value
         return thisNode
 
@@ -55,7 +57,7 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 8):
     for bin in list(split(examples, binCount)):
         newAvailableAttributes = availableAttributes.copy()
         newAvailableAttributes.remove(bestAttribute)
-        newNode = ID3(bin, targetAttribute, newAvailableAttributes, binCount)
+        newNode = ID3(bin, targetAttribute, newAvailableAttributes, binCount, currentDepth + 1)
         # newNode.parent = thisNode
         thisNode.children.append(newNode)
         newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
@@ -138,7 +140,7 @@ def readData(filename):
 
 # dataPoints = readData(r'data/synthetic-1.csv')
 dataPoints = readData(r'data/pokemonAppended.csv')
-root = ID3(dataPoints, len(dataPoints[0]) - 1, [0, 1], 5)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, [0, 1, 2, 3, 4, 5], 4)
 # plot(dataPoints)
 
 # # print(RenderTree(root))
@@ -160,7 +162,7 @@ root = ID3(dataPoints, len(dataPoints[0]) - 1, [0, 1], 5)
 correct = 0
 total = 0
 for point in dataPoints:
-    if predict(root, (point[0], point[1])) == point[len(dataPoints[0]) - 1]:
+    if predict(root, point) == point[len(dataPoints[0]) - 1]:
         correct += 1
     total += 1
 print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
