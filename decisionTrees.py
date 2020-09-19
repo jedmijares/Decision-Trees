@@ -19,7 +19,7 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
-def ID3(examples, targetAttribute, availableAttributes, binCount = 8, currentDepth = 0):
+def ID3(examples, targetAttribute, availableAttributes, binCount = 8, featureList = [], currentDepth = 0):
     # thisNode = AnyNode()
     # thisNode.values = [float('-inf'), float('inf')]
     # thisNode.label = None
@@ -35,35 +35,39 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 8, currentDep
     if allMatch:
         thisNode.label = examples[0][targetAttribute]
         return thisNode
-    if (not availableAttributes) | (currentDepth >= 3): # if there are no more valid attributes
+    if (not availableAttributes) | (currentDepth >= 5): # if there are no more valid attributes
         thisNode.label = mode(label[targetAttribute] for label in examples) # set label to most common value
         return thisNode
 
     # calculate entropy and find best attribute to split on
-    entropies = []
+    entropies = [0] * (max(availableAttributes) + 1)
+    # for attribute in availableAttributes:
+    #     entropies.insert(attribute, 0)
     for attribute in availableAttributes:
-        entropies.insert(attribute, 0)
-    for label in [True, False]:
-        classLabels = [elem[targetAttribute] for elem in examples]
-        proportion = classLabels.count(label)/len(examples)
-        if proportion != 0:
-            entropies[attribute] += (-proportion * log2(proportion))
+        for label in [True, False]:
+            classLabels = [elem[targetAttribute] for elem in examples]
+            proportion = classLabels.count(label)/len(examples)
+            if proportion != 0:
+                # print(attribute)
+                # print(len(entropies))
+                entropies[attribute] += (-proportion * log2(proportion))
     bestAttribute = entropies.index(max(entropies))
     thisNode.feature = bestAttribute
+    # print(entropies)
 
     # place examples in bins and recurse
     examples.sort(key = lambda x: x[bestAttribute])
     minimum = float('-inf')
     for bin in list(split(examples, binCount)):
-        newAvailableAttributes = availableAttributes.copy()
-        newAvailableAttributes.remove(bestAttribute)
-        newNode = ID3(bin, targetAttribute, newAvailableAttributes, binCount, currentDepth + 1)
-        # newNode.parent = thisNode
-        thisNode.children.append(newNode)
-        newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
-        minimum = newNode.values[1]
-        if max(bin, key = lambda x: x[bestAttribute])[bestAttribute] == max(examples, key = lambda x: x[bestAttribute])[bestAttribute]:
-            newNode.values[1] = float('inf')
+        if bin: # if bin is not empty
+            newAvailableAttributes = availableAttributes.copy()
+            newAvailableAttributes.remove(bestAttribute)
+            newNode = ID3(bin, targetAttribute, newAvailableAttributes, binCount, currentDepth + 1)
+            thisNode.children.append(newNode)
+            newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
+            minimum = newNode.values[1]
+            if max(bin, key = lambda x: x[bestAttribute])[bestAttribute] == max(examples, key = lambda x: x[bestAttribute])[bestAttribute]:
+                newNode.values[1] = float('inf')
     return thisNode
 
 def predict(rootNode, point):
@@ -76,6 +80,7 @@ def predict(rootNode, point):
 def plot(points):
     x = [elem[0] for elem in points]
     y = [elem[1] for elem in points]
+    # set bounds of plat a little further than the max and min
     x_min = min(x) - 1
     x_max = max(x) + 1
     y_min = min(y) - 1
@@ -144,25 +149,46 @@ def readData(filename, hasHeader = False):
 
 # print(list(range(4)))
 
-dataPoints = readData(r'data/synthetic-1.csv')
-# dataPoints, features = readData(r'data/pokemonAppended.csv', True)
-root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 2)
-# plot(dataPoints)
+dataPoints = readData(r'data/synthetic-2.csv')
+# dataPoints, featureNames = readData(r'data/pokemonAppended.csv', True)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)))
+# root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(7)), 2, featureNames)
+
+plot(dataPoints)
 
 # print(RenderTree(root))
 print(root.values)
 print(root.feature)
+# print(featureNames[root.feature])
 print(root.label)
-# print("---------")
+print("---------")
 for child in root.children:
     print("-", child.values)
     print("-", child.feature)
+    # print("-", featureNames[child.feature])
     print("-", child.label)
-    # print("---------")
+    print("---------")
     for kiddo in child.children:
         print("--", kiddo.values)
         print("--", kiddo.feature)
+        # if kiddo.feature:
+        #     print("--", featureNames[kiddo.feature])
         print("--", kiddo.label)
+        print("---------")
+    #     for kid in kiddo.children:
+    #         print("---", kid.values)
+    #         # print("---", kid.feature)
+    #         if kid.feature:
+    #             print("---", featureNames[kid.feature])
+    #         print("---", kid.label)
+    #         print("---------")
+    #         for baby in kid.children:
+    #             print("----", baby.values)
+    #             # print("---", baby.feature)
+    #             if baby.feature:
+    #                 print("----", featureNames[baby.feature])
+    #             print("----", baby.label)
+    #             print("---------")
 
 # check accuracy
 correct = 0
