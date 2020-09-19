@@ -13,17 +13,21 @@ class MyNode:
         self.label = None
         self.children = []
         self.feature = None
+        self.depth = None
 
 # https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
 def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
-def ID3(examples, targetAttribute, availableAttributes, binCount = 8, featureList = [], currentDepth = 0):
+def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount = 8, featureList = []):
     # thisNode = AnyNode()
     # thisNode.values = [float('-inf'), float('inf')]
     # thisNode.label = None
     thisNode = MyNode()
+    thisNode.depth = currentDepth
+    # print(currentDepth)
+    # newDepth = currentDepth + 1
 
     # handle base cases
     # https://thispointer.com/python-check-if-all-elements-in-a-list-are-same-or-matches-a-condition/
@@ -35,7 +39,7 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 8, featureLis
     if allMatch:
         thisNode.label = examples[0][targetAttribute]
         return thisNode
-    if (not availableAttributes) | (currentDepth >= 5): # if there are no more valid attributes
+    if (not availableAttributes) | (currentDepth >= 3): # if there are no more valid attributes
         thisNode.label = mode(label[targetAttribute] for label in examples) # set label to most common value
         return thisNode
 
@@ -62,7 +66,7 @@ def ID3(examples, targetAttribute, availableAttributes, binCount = 8, featureLis
         if bin: # if bin is not empty
             newAvailableAttributes = availableAttributes.copy()
             newAvailableAttributes.remove(bestAttribute)
-            newNode = ID3(bin, targetAttribute, newAvailableAttributes, binCount, currentDepth + 1)
+            newNode = ID3(bin, targetAttribute, newAvailableAttributes, currentDepth+1, binCount)
             thisNode.children.append(newNode)
             newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
             minimum = newNode.values[1]
@@ -149,46 +153,60 @@ def readData(filename, hasHeader = False):
 
 # print(list(range(4)))
 
-dataPoints = readData(r'data/synthetic-2.csv')
-# dataPoints, featureNames = readData(r'data/pokemonAppended.csv', True)
-root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)))
+# dataPoints = readData(r'data/synthetic-4.csv')
+dataPoints, featureNames = readData(r'data/pokemonAppended.csv', True)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, 2)
 # root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(7)), 2, featureNames)
 
-plot(dataPoints)
+# plot(dataPoints)
 
 # print(RenderTree(root))
+print(root.depth)
 print(root.values)
-print(root.feature)
-# print(featureNames[root.feature])
+# print(root.feature)
+print(featureNames[root.feature])
 print(root.label)
 print("---------")
 for child in root.children:
+    print("-", child.depth)
     print("-", child.values)
-    print("-", child.feature)
-    # print("-", featureNames[child.feature])
+    # print("-", child.feature)
+    if child.feature:
+        print("-", featureNames[child.feature])
     print("-", child.label)
     print("---------")
     for kiddo in child.children:
+        print("--", kiddo.depth)
         print("--", kiddo.values)
-        print("--", kiddo.feature)
-        # if kiddo.feature:
-        #     print("--", featureNames[kiddo.feature])
+        # print("--", kiddo.feature)
+        if kiddo.feature:
+            print("--", featureNames[kiddo.feature])
         print("--", kiddo.label)
         print("---------")
-    #     for kid in kiddo.children:
-    #         print("---", kid.values)
-    #         # print("---", kid.feature)
-    #         if kid.feature:
-    #             print("---", featureNames[kid.feature])
-    #         print("---", kid.label)
-    #         print("---------")
-    #         for baby in kid.children:
-    #             print("----", baby.values)
-    #             # print("---", baby.feature)
-    #             if baby.feature:
-    #                 print("----", featureNames[baby.feature])
-    #             print("----", baby.label)
-    #             print("---------")
+        for kid in kiddo.children:
+            print("---", kid.depth)
+            print("---", kid.values)
+            # print("---", kid.feature)
+            if kid.feature:
+                print("---", featureNames[kid.feature])
+            print("---", kid.label)
+            print("---------")
+            for baby in kid.children:
+                print("----", baby.depth)
+                print("----", baby.values)
+                # print("---", baby.feature)
+                if baby.feature:
+                    print("----", featureNames[baby.feature])
+                print("----", baby.label)
+                print("---------")
+                for infant in baby.children:
+                    print("-----", infant.depth)
+                    print("-----", infant.values)
+                    # print("-----", infant.feature)
+                    if infant.feature:
+                        print("-----", featureNames[infant.feature])
+                    print("-----", infant.label)
+                    print("---------")
 
 # check accuracy
 correct = 0
