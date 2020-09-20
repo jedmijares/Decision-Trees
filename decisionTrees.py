@@ -1,5 +1,4 @@
 import csv
-from operator import itemgetter
 from statistics import mode # get most common values
 from math import log2
 import numpy as np
