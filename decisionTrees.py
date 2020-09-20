@@ -1,6 +1,5 @@
 import csv
 from operator import itemgetter
-# from anytree import Node, RenderTree, AnyNode # pip install anytree
 from statistics import mode # get most common values
 from math import log2
 import numpy as np
@@ -21,13 +20,8 @@ def split(a, n):
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
 def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount = 8, featureList = []):
-    # thisNode = AnyNode()
-    # thisNode.values = [float('-inf'), float('inf')]
-    # thisNode.label = None
     thisNode = MyNode()
     thisNode.depth = currentDepth
-    # print(currentDepth)
-    # newDepth = currentDepth + 1
 
     # handle base cases
     # https://thispointer.com/python-check-if-all-elements-in-a-list-are-same-or-matches-a-condition/
@@ -50,7 +44,6 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount =
         proportion = classLabels.count(label)/len(examples)
         if proportion != 0:
             entropy += (-proportion * log2(proportion))
-    # print(entropy)
 
     # calculate information gain of each available attribute to find the best one to split on
     infoGains = [0] * (max(availableAttributes) + 1)
@@ -183,29 +176,10 @@ def readData(filename, hasHeader = False):
         return dataPoints, features
     return dataPoints
 
-# def readPokemon(stats, legendary):
-#     statData = pd.read_csv(stats)
-#     legendaryLabel = pd.read_csv(legendary)
-#     # dataPoints = []
-#     # https://realpython.com/python-csv/
-#     # with open(filename) as csv_file:
-#     #     csv_reader = csv.reader(csv_file, delimiter=',')
-#     #     features = next(csv_reader) 
-#     #     # csv_file.seek(0)              # go back to beginning of file
-#     #     for row in csv_reader:
-#     #         dataPoints.append((int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4]), int(row[5]), int(row[6])))
-#     return dataPoints, features
-
-# dataPoints, features = readPokemon(r'data\pokemonStats.csv', r'data\pokemonLegendary.csv')
-# print(dataPoints)
-
-# print(list(range(4)))
-
 featureNames = ['x', 'y']
 dataPoints = readData(r'data/synthetic-4.csv')
 # dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
 root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, binCount=8, featureList=featureNames)
-# root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(7)), 2, featureNames)
 
 plot(dataPoints)
 
