@@ -123,7 +123,9 @@ def predict(rootNode, point):
                 return child.label
             return predict(child, point)
 
-def plot(points):
+def plot(points, subplot = False, plotIndex = 0):
+    if(subplot):
+        ax = plt.subplot(2, 2, plotIndex)
     x = [elem[0] for elem in points]
     y = [elem[1] for elem in points]
     # set bounds of plat a little further than the max and min
@@ -149,7 +151,8 @@ def plot(points):
         else:
             colors.append('r')
     plt.scatter(x, y, c = colors)
-    plt.show()
+    # plt.show()
+    return ax
 
 def readData(filename, hasHeader = False):
     dataPoints = []
@@ -177,12 +180,20 @@ def readData(filename, hasHeader = False):
         return dataPoints, features
     return dataPoints
 
-featureNames = ['x', 'y']
-dataPoints = readData(r'data/synthetic-4.csv')
-# dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
-root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, binCount=5, featureList=featureNames)
+plotIndex = 1
+for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthetic-3.csv', r'data/synthetic-4.csv']:
+    featureNames = ['x', 'y']
+    dataPoints = readData(fileName)
+    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, binCount=6, featureList=featureNames)
+    ax = plot(dataPoints, True, plotIndex)
+    ax.set_title(fileName)
+    plotIndex += 1
+# fig.suptitle()
+plt.show()
 
-plot(dataPoints)
+
+# dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
+
 
 # # print(RenderTree(root))
 # print(root.depth)
