@@ -3,6 +3,7 @@ from statistics import mode # get most common values
 from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
+import random
 
 # node class for use in decision tree
 class MyNode:
@@ -19,7 +20,7 @@ def split(a, n):
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
 # implementation of ID3 algorithm
-def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount = 8, featureList = []):
+def ID3(examples, targetAttribute, availableAttributes, currentDepth, maxDepth = 3, binCount = 8, featureList = []):
     thisNode = MyNode()
     thisNode.depth = currentDepth
 
@@ -33,7 +34,7 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount =
     if allMatch:
         thisNode.label = examples[0][targetAttribute]
         return thisNode
-    if (not availableAttributes) | (currentDepth >= 3): # if there are no more valid attributes
+    if (not availableAttributes) | (currentDepth >= maxDepth): # if there are no more valid attributes
         thisNode.label = mode(label[targetAttribute] for label in examples) # set label to most common value
         return thisNode
 
@@ -98,7 +99,7 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount =
             for bin in [trueVals, falseVals]:
                 newAvailableAttributes = availableAttributes.copy()
                 newAvailableAttributes.remove(bestAttribute)
-                newNode = ID3(bin, targetAttribute, newAvailableAttributes, currentDepth=currentDepth+1, binCount=binCount, featureList=featureList)
+                newNode = ID3(bin, targetAttribute, newAvailableAttributes, maxDepth=maxDepth, currentDepth=currentDepth+1, binCount=binCount, featureList=featureList)
                 thisNode.children.append(newNode)
                 newNode.values = [bin[0][bestAttribute], bin[0][bestAttribute]] # set the "range" of this split to two copies of either True or False
             return thisNode
@@ -108,7 +109,7 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount =
         if bin: # if bin is not empty
             newAvailableAttributes = availableAttributes.copy()
             newAvailableAttributes.remove(bestAttribute)
-            newNode = ID3(bin, targetAttribute, newAvailableAttributes, currentDepth+1, binCount, featureList=featureList)
+            newNode = ID3(bin, targetAttribute, newAvailableAttributes, currentDepth+1, maxDepth=maxDepth, binCount=binCount, featureList=featureList)
             thisNode.children.append(newNode)
             newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
             minimum = newNode.values[1]
@@ -123,7 +124,7 @@ def predict(rootNode, point):
                 return child.label
             return predict(child, point)
 
-def plot(points, subplot = False, plotIndex = 0):
+def plot(points, rootNode, subplot = False, plotIndex = 0):
     if(subplot):
         ax = plt.subplot(2, 2, plotIndex)
     x = [elem[0] for elem in points]
@@ -138,7 +139,7 @@ def plot(points, subplot = False, plotIndex = 0):
     plt.tight_layout(h_pad=0.5, w_pad=0.5, pad=2.5)
     predictions = []
     for pair in np.c_[xx.ravel(), yy.ravel()]:
-        predictions.append(predict(root, (pair[0], pair[1])))
+        predictions.append(predict(rootNode, (pair[0], pair[1])))
     predictions = np.asarray(predictions)
     predictions = predictions.reshape(xx.shape)
 
@@ -184,10 +185,85 @@ plotIndex = 1
 for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthetic-3.csv', r'data/synthetic-4.csv']:
     featureNames = ['x', 'y']
     dataPoints = readData(fileName)
-    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, binCount=6, featureList=featureNames)
-    ax = plot(dataPoints, True, plotIndex)
-    ax.set_title(fileName)
+    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=3, binCount=8, featureList=featureNames)
+    subplot = plot(dataPoints, root, True, plotIndex)
+    subplot.set_title(fileName)
     plotIndex += 1
+
+    # check accuracy
+    correct = 0
+    total = 0
+    for point in dataPoints:
+        if predict(root, point) == point[len(dataPoints[0]) - 1]:
+            correct += 1
+        total += 1
+    print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
+# fig.suptitle()
+plt.show()
+
+random.seed(4) # set seed for repeatability
+foldSize = 50
+plotIndex = 1
+for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthetic-3.csv', r'data/synthetic-4.csv']:
+    featureNames = ['x', 'y']
+    dataPoints = readData(fileName)
+    random.shuffle(dataPoints) # shuffle data so true and false class labels are shuffled
+    correctCounts = [0, 0, 0]
+    for maximumDepth in [1, 2]:
+        correct = 0
+        # total = 0
+        for i in range(int(len(dataPoints)/foldSize)):
+            foldPoints = dataPoints.copy()
+            del foldPoints[i*foldSize:(i+1)*foldSize]
+            root = ID3(foldPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=maximumDepth, binCount=8, featureList=featureNames)
+            # check accuracy by testing the removed points
+            for point in dataPoints[i*foldSize:(i+1)*foldSize]:
+                if predict(root, point) == point[len(dataPoints[0]) - 1]:
+                    correct += 1
+                # total += 1
+        print("For depth", maximumDepth, ":", correct, "correct")
+        correctCounts[maximumDepth] = correct
+    bestMaxDepth = correctCounts.index(max(correctCounts))
+    print(bestMaxDepth)
+    featureNames = ['x', 'y']
+    dataPoints = readData(fileName)
+    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=bestMaxDepth, binCount=6, featureList=featureNames)
+        # # print(RenderTree(root))
+        # print(root.depth)
+        # print(root.values)
+        # if root.feature != None:
+        #     print(featureNames[root.feature])
+        # print(root.label)
+        # print("---------")
+        # for child in root.children:
+        #     print("-", child.depth)
+        #     print("-", child.values)
+        #     # print("-", child.feature)
+        #     if child.feature != None:
+        #         print("-", featureNames[child.feature])
+        #     print("-", child.label)
+        #     print("---------")
+        #     for kiddo in child.children:
+        #         print("--", kiddo.depth)
+        #         print("--", kiddo.values)
+        #         # print("--", kiddo.feature)
+        #         if kiddo.feature != None:
+        #             print("--", featureNames[kiddo.feature])
+        #         print("--", kiddo.label)
+        #         print("---------")
+
+    subplot = plot(dataPoints, root, True, plotIndex)
+    subplot.set_title(fileName)
+    plotIndex += 1
+
+    # check accuracy
+    correct = 0
+    total = 0
+    for point in dataPoints:
+        if predict(root, point) == point[len(dataPoints[0]) - 1]:
+            correct += 1
+        total += 1
+    print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
 # fig.suptitle()
 plt.show()
 
@@ -243,11 +319,11 @@ plt.show()
 #                     print("-----", infant.label)
 #                     print("---------")
 
-# check accuracy
-correct = 0
-total = 0
-for point in dataPoints:
-    if predict(root, point) == point[len(dataPoints[0]) - 1]:
-        correct += 1
-    total += 1
-print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
+# # check accuracy
+# correct = 0
+# total = 0
+# for point in dataPoints:
+#     if predict(root, point) == point[len(dataPoints[0]) - 1]:
+#         correct += 1
+#     total += 1
+# print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
