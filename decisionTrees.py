@@ -4,7 +4,6 @@ from statistics import mode # get most common values
 from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
-import pandas as pd # pip install pandas
 
 class MyNode:
     def __init__(self):
