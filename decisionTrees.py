@@ -204,6 +204,7 @@ def readData(filename, hasHeader = False):
 
 # print(list(range(4)))
 
+featureNames = ['x', 'y']
 # dataPoints = readData(r'data/synthetic-4.csv')
 dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
 print(featureNames)
