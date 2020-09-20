@@ -4,6 +4,7 @@ from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
 
+# node class for use in decision tree
 class MyNode:
     def __init__(self):
         self.values = [float('-inf'), float('inf')]
@@ -17,6 +18,7 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
 
+# implementation of ID3 algorithm
 def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount = 8, featureList = []):
     thisNode = MyNode()
     thisNode.depth = currentDepth
@@ -49,7 +51,8 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount =
         infoGains[attribute] = entropy
         examples.sort(key = lambda x: x[attribute])
         if (len(featureList) > 0): 
-            if (featureList[attribute].startswith("Type")): # if a list of feature names was passed and this feature represents a Pokemon type
+            # if a list of feature names was passed and this feature represents a Pokemon type
+            if (featureList[attribute].startswith("Type")): 
                 trueVals = []
                 falseVals = []
                 for point in examples:
@@ -131,13 +134,13 @@ def plot(points):
     plot_step = 0.05
     xx, yy = np.meshgrid(np.arange(x_min, x_max, plot_step), np.arange(y_min, y_max, plot_step))
     plt.tight_layout(h_pad=0.5, w_pad=0.5, pad=2.5)
-    Z = []
+    predictions = []
     for pair in np.c_[xx.ravel(), yy.ravel()]:
-        Z.append(predict(root, (pair[0], pair[1])))
-    Z = np.asarray(Z)
-    Z = Z.reshape(xx.shape)
+        predictions.append(predict(root, (pair[0], pair[1])))
+    predictions = np.asarray(predictions)
+    predictions = predictions.reshape(xx.shape)
 
-    plt.contourf(xx, yy, Z, cmap=plt.cm.RdBu)
+    plt.contourf(xx, yy, predictions, cmap=plt.cm.RdBu)
     classLabels = [elem[2] for elem in points]
     colors = []
     for i in range(len(classLabels)):
@@ -177,57 +180,57 @@ def readData(filename, hasHeader = False):
 featureNames = ['x', 'y']
 dataPoints = readData(r'data/synthetic-4.csv')
 # dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
-root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, binCount=8, featureList=featureNames)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, binCount=5, featureList=featureNames)
 
 plot(dataPoints)
 
-# print(RenderTree(root))
-print(root.depth)
-print(root.values)
-# print(root.feature)
-print(featureNames[root.feature])
-print(root.label)
-print("---------")
-for child in root.children:
-    print("-", child.depth)
-    print("-", child.values)
-    # print("-", child.feature)
-    if child.feature != None:
-        print("-", featureNames[child.feature])
-    print("-", child.label)
-    print("---------")
-    for kiddo in child.children:
-        print("--", kiddo.depth)
-        print("--", kiddo.values)
-        # print("--", kiddo.feature)
-        if kiddo.feature != None:
-            print("--", featureNames[kiddo.feature])
-        print("--", kiddo.label)
-        print("---------")
-        for kid in kiddo.children:
-            print("---", kid.depth)
-            print("---", kid.values)
-            # print("---", kid.feature)
-            if kid.feature != None:
-                print("---", featureNames[kid.feature])
-            print("---", kid.label)
-            print("---------")
-            for baby in kid.children:
-                print("----", baby.depth)
-                print("----", baby.values)
-                # print("---", baby.feature)
-                if baby.feature != None:
-                    print("----", featureNames[baby.feature])
-                print("----", baby.label)
-                print("---------")
-                for infant in baby.children:
-                    print("-----", infant.depth)
-                    print("-----", infant.values)
-                    # print("-----", infant.feature)
-                    if infant.feature:
-                        print("-----", featureNames[infant.feature])
-                    print("-----", infant.label)
-                    print("---------")
+# # print(RenderTree(root))
+# print(root.depth)
+# print(root.values)
+# # print(root.feature)
+# print(featureNames[root.feature])
+# print(root.label)
+# print("---------")
+# for child in root.children:
+#     print("-", child.depth)
+#     print("-", child.values)
+#     # print("-", child.feature)
+#     if child.feature != None:
+#         print("-", featureNames[child.feature])
+#     print("-", child.label)
+#     print("---------")
+#     for kiddo in child.children:
+#         print("--", kiddo.depth)
+#         print("--", kiddo.values)
+#         # print("--", kiddo.feature)
+#         if kiddo.feature != None:
+#             print("--", featureNames[kiddo.feature])
+#         print("--", kiddo.label)
+#         print("---------")
+#         for kid in kiddo.children:
+#             print("---", kid.depth)
+#             print("---", kid.values)
+#             # print("---", kid.feature)
+#             if kid.feature != None:
+#                 print("---", featureNames[kid.feature])
+#             print("---", kid.label)
+#             print("---------")
+#             for baby in kid.children:
+#                 print("----", baby.depth)
+#                 print("----", baby.values)
+#                 # print("---", baby.feature)
+#                 if baby.feature != None:
+#                     print("----", featureNames[baby.feature])
+#                 print("----", baby.label)
+#                 print("---------")
+#                 for infant in baby.children:
+#                     print("-----", infant.depth)
+#                     print("-----", infant.values)
+#                     # print("-----", infant.feature)
+#                     if infant.feature:
+#                         print("-----", featureNames[infant.feature])
+#                     print("-----", infant.label)
+#                     print("---------")
 
 # check accuracy
 correct = 0
