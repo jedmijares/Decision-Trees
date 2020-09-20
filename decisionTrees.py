@@ -43,21 +43,32 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount =
         thisNode.label = mode(label[targetAttribute] for label in examples) # set label to most common value
         return thisNode
 
-    # calculate entropy and find best attribute to split on
-    entropies = [0] * (max(availableAttributes) + 1)
-    # for attribute in availableAttributes:
-    #     entropies.insert(attribute, 0)
+    # calculate entropy of the current set
+    entropy = 0
+    for label in [True, False]:
+        classLabels = [elem[targetAttribute] for elem in examples]
+        proportion = classLabels.count(label)/len(examples)
+        if proportion != 0:
+            entropy += (-proportion * log2(proportion))
+    # print(entropy)
+
+    # calculate information gain of each available attribute to find the best one to split on
+    infoGains = [0] * (max(availableAttributes) + 1)
     for attribute in availableAttributes:
-        for label in [True, False]:
-            classLabels = [elem[targetAttribute] for elem in examples]
-            proportion = classLabels.count(label)/len(examples)
-            if proportion != 0:
-                # print(attribute)
-                # print(len(entropies))
-                entropies[attribute] += (-proportion * log2(proportion))
-    bestAttribute = entropies.index(max(entropies))
+        infoGains[attribute] = entropy
+        examples.sort(key = lambda x: x[attribute])
+        for bin in list(split(examples, binCount)):
+            if bin: # if bin is not empty
+                binEntropy = 0 # entropy of this bin
+                for label in [True, False]:
+                    classLabels = [elem[targetAttribute] for elem in bin]
+                    proportion = classLabels.count(label)/len(bin)
+                    if proportion != 0:
+                        binEntropy += (-proportion * log2(proportion))
+                infoGains[attribute] -= len(bin)/len(examples)*binEntropy
+    bestAttribute = infoGains.index(max(infoGains))
     thisNode.feature = bestAttribute
-    # print(entropies)
+    
 
     # place examples in bins and recurse
     examples.sort(key = lambda x: x[bestAttribute])
@@ -154,8 +165,8 @@ def readData(filename, hasHeader = False):
 # print(list(range(4)))
 
 # dataPoints = readData(r'data/synthetic-4.csv')
-dataPoints, featureNames = readData(r'data/pokemonAppended.csv', True)
-root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, 2)
+dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, 4)
 # root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(7)), 2, featureNames)
 
 # plot(dataPoints)
@@ -171,7 +182,7 @@ for child in root.children:
     print("-", child.depth)
     print("-", child.values)
     # print("-", child.feature)
-    if child.feature:
+    if child.feature != None:
         print("-", featureNames[child.feature])
     print("-", child.label)
     print("---------")
@@ -179,7 +190,7 @@ for child in root.children:
         print("--", kiddo.depth)
         print("--", kiddo.values)
         # print("--", kiddo.feature)
-        if kiddo.feature:
+        if kiddo.feature != None:
             print("--", featureNames[kiddo.feature])
         print("--", kiddo.label)
         print("---------")
@@ -187,7 +198,7 @@ for child in root.children:
             print("---", kid.depth)
             print("---", kid.values)
             # print("---", kid.feature)
-            if kid.feature:
+            if kid.feature != None:
                 print("---", featureNames[kid.feature])
             print("---", kid.label)
             print("---------")
@@ -195,7 +206,7 @@ for child in root.children:
                 print("----", baby.depth)
                 print("----", baby.values)
                 # print("---", baby.feature)
-                if baby.feature:
+                if baby.feature != None:
                     print("----", featureNames[baby.feature])
                 print("----", baby.label)
                 print("---------")
