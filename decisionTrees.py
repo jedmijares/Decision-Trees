@@ -57,27 +57,67 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, binCount =
     for attribute in availableAttributes:
         infoGains[attribute] = entropy
         examples.sort(key = lambda x: x[attribute])
-        for bin in list(split(examples, binCount)):
-            if bin: # if bin is not empty
-                binEntropy = 0 # entropy of this bin
-                for label in [True, False]:
-                    classLabels = [elem[targetAttribute] for elem in bin]
-                    proportion = classLabels.count(label)/len(bin)
-                    if proportion != 0:
-                        binEntropy += (-proportion * log2(proportion))
-                infoGains[attribute] -= len(bin)/len(examples)*binEntropy
+        if (len(featureList) > 0): 
+            if (featureList[attribute].startswith("Type")): # if a list of feature names was passed and this feature represents a Pokemon type
+                trueVals = []
+                falseVals = []
+                for point in examples:
+                    if point[attribute] == True:
+                        trueVals.append(point)
+                    else:
+                        falseVals.append(point)
+                for bin in [trueVals, falseVals]:
+                    if bin: # if bin is not empty
+                        binEntropy = 0 # entropy of this bin
+                        for label in [True, False]:
+                            classLabels = [elem[targetAttribute] for elem in bin]
+                            proportion = classLabels.count(label)/len(bin)
+                            if proportion != 0:
+                                binEntropy += (-proportion * log2(proportion))
+                        infoGains[attribute] -= len(bin)/len(examples)*binEntropy
+        else: # this attribute is float data
+            for bin in list(split(examples, binCount)):
+                if bin: # if bin is not empty
+                    binEntropy = 0 # entropy of this bin
+                    for label in [True, False]:
+                        classLabels = [elem[targetAttribute] for elem in bin]
+                        proportion = classLabels.count(label)/len(bin)
+                        if proportion != 0:
+                            binEntropy += (-proportion * log2(proportion))
+                    infoGains[attribute] -= len(bin)/len(examples)*binEntropy
     bestAttribute = infoGains.index(max(infoGains))
     thisNode.feature = bestAttribute
     
 
     # place examples in bins and recurse
     examples.sort(key = lambda x: x[bestAttribute])
+
+    if (len(featureList) > 0): 
+        # print("here")
+        if (featureList[bestAttribute].startswith('Type')): # if a list of feature names was passed and the best feature represents a Pokemon type
+            # print("here2")
+            trueVals = []
+            falseVals = []
+            for point in examples:
+                if point[bestAttribute] == True:
+                    trueVals.append(point)
+                else:
+                    falseVals.append(point)
+            for bin in [trueVals, falseVals]:
+                newAvailableAttributes = availableAttributes.copy()
+                newAvailableAttributes.remove(bestAttribute)
+                newNode = ID3(bin, targetAttribute, newAvailableAttributes, currentDepth+1, binCount, featureList=featureList)
+                thisNode.children.append(newNode)
+                newNode.values = [bin[0][bestAttribute], bin[0][bestAttribute]] # set the "range" of this split to two copies of either True or False
+            return thisNode
+
+    # else, this is float data            
     minimum = float('-inf')
     for bin in list(split(examples, binCount)):
         if bin: # if bin is not empty
             newAvailableAttributes = availableAttributes.copy()
             newAvailableAttributes.remove(bestAttribute)
-            newNode = ID3(bin, targetAttribute, newAvailableAttributes, currentDepth+1, binCount)
+            newNode = ID3(bin, targetAttribute, newAvailableAttributes, currentDepth+1, binCount, featureList=featureList)
             thisNode.children.append(newNode)
             newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
             minimum = newNode.values[1]
@@ -166,7 +206,8 @@ def readData(filename, hasHeader = False):
 
 # dataPoints = readData(r'data/synthetic-4.csv')
 dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
-root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, 4)
+print(featureNames)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, binCount=4, featureList=featureNames)
 # root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(7)), 2, featureNames)
 
 # plot(dataPoints)
