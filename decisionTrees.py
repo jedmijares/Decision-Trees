@@ -185,7 +185,7 @@ def readData(filename, hasHeader = False):
         return dataPoints, features
     return dataPoints
 
-BINCOUNT = 6
+BINCOUNT = 8
 
 plotIndex = 1
 for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthetic-3.csv', r'data/synthetic-4.csv']:
