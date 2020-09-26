@@ -82,13 +82,13 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, maxDepth =
                     infoGains[attribute] -= len(bin)/len(examples)*binEntropy
     bestAttribute = infoGains.index(max(infoGains))
     thisNode.feature = bestAttribute
-    
 
     # place examples in bins and recurse
     examples.sort(key = lambda x: x[bestAttribute])
 
     if (len(featureList) > 0): 
-        if (featureList[bestAttribute].startswith('Type')): # if a list of feature names was passed and the best feature represents a Pokemon type
+        # if a list of feature names was passed and the best feature represents a Pokemon type
+        if (featureList[bestAttribute].startswith('Type')): 
             trueVals = []
             falseVals = []
             for point in examples:
@@ -101,7 +101,8 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, maxDepth =
                 newAvailableAttributes.remove(bestAttribute)
                 newNode = ID3(bin, targetAttribute, newAvailableAttributes, maxDepth=maxDepth, currentDepth=currentDepth+1, binCount=binCount, featureList=featureList)
                 thisNode.children.append(newNode)
-                newNode.values = [bin[0][bestAttribute], bin[0][bestAttribute]] # set the "range" of this split to two copies of either True or False
+                # set the "range" of this split to two copies of either True or False
+                newNode.values = [bin[0][bestAttribute], bin[0][bestAttribute]] 
             return thisNode
     # else, this is float data            
     minimum = float('-inf')
@@ -114,9 +115,11 @@ def ID3(examples, targetAttribute, availableAttributes, currentDepth, maxDepth =
             newNode.values = [minimum, max(bin, key = lambda x: x[bestAttribute])[bestAttribute]]
             minimum = newNode.values[1]
             if max(bin, key = lambda x: x[bestAttribute])[bestAttribute] == max(examples, key = lambda x: x[bestAttribute])[bestAttribute]:
-                newNode.values[1] = float('inf') # if the maximum of this bin is the maximum of all the examples, this bin should cover values to infinity
+                # if the maximum of this bin is the maximum of all the examples, this bin should cover values to infinity
+                newNode.values[1] = float('inf') 
     return thisNode
 
+# given the tree and a point, predict class label of the point
 def predict(rootNode, point):
     for child in rootNode.children:
         if( child.values[0] <= point[rootNode.feature] <= child.values[1]):
@@ -124,6 +127,7 @@ def predict(rootNode, point):
                 return child.label
             return predict(child, point)
 
+# referred to https://scikit-learn.org/0.15/auto_examples/tree/plot_iris.html
 def plot(points, rootNode, subplot = False, plotIndex = 0):
     if(subplot):
         ax = plt.subplot(2, 2, plotIndex)
@@ -152,7 +156,6 @@ def plot(points, rootNode, subplot = False, plotIndex = 0):
         else:
             colors.append('r')
     plt.scatter(x, y, c = colors)
-    # plt.show()
     return ax
 
 def readData(filename, hasHeader = False):
@@ -161,17 +164,12 @@ def readData(filename, hasHeader = False):
     # https://realpython.com/python-csv/
     with open(filename) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
-        # ncol = len(next(csv_reader)) # Read first line and count columns
         if(hasHeader):
             features = next(csv_reader)
-        # csv_file.seek(0)              # go back to beginning of file
         for row in csv_reader:
-            # print(row)
             newPoint = row
             for i in range(len(newPoint)):
-                # if (hasHeader): # Generation data is treated differently
-                #     if (features[i] == "Generation"):
-                #         newPoint[i] = float(newPoint[i])
+                # store data as either a Boolean or a float
                 if (newPoint[i] == '0') | (newPoint[i] == 'FALSE'):
                     newPoint[i] = False
                 elif (newPoint[i] == '1') | (newPoint[i] == 'TRUE'):
@@ -180,13 +178,13 @@ def readData(filename, hasHeader = False):
                     newPoint[i] = float(newPoint[i])
             newPoint = tuple(newPoint)
             dataPoints.append(newPoint)
-    # print(dataPoints)
     if hasHeader:
         return dataPoints, features
     return dataPoints
 
 BINCOUNT = 8
 
+# create/plot trees for synthetic data
 plotIndex = 1
 for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthetic-3.csv', r'data/synthetic-4.csv']:
     featureNames = ['x', 'y']
@@ -205,21 +203,20 @@ for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthe
         total += 1
     print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
 plt.suptitle("Plots")
-# plt.show()
 plt.savefig(r'media/plots.png')
 plt.close()
-# create trees with cross-validation
+
+# create/plot trees with cross-validation
 random.seed(4) # set seed for repeatability
-foldSize = 50
+foldSize = 50 # size of a fold, 200/50 = 4 folds
 plotIndex = 1
 for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthetic-3.csv', r'data/synthetic-4.csv']:
     featureNames = ['x', 'y']
     dataPoints = readData(fileName)
     random.shuffle(dataPoints) # shuffle data so true and false class labels are shuffled
-    correctCounts = [0, 0, 0]
+    correctCounts = [0, 0, 0] # number of correctly predicted examples at each depth
     for maximumDepth in [1, 2]:
         correct = 0
-        # total = 0
         for i in range(int(len(dataPoints)/foldSize)):
             foldPoints = dataPoints.copy()
             del foldPoints[i*foldSize:(i+1)*foldSize]
@@ -228,11 +225,10 @@ for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthe
             for point in dataPoints[i*foldSize:(i+1)*foldSize]:
                 if predict(root, point) == point[len(dataPoints[0]) - 1]:
                     correct += 1
-                # total += 1
         print("For depth", maximumDepth, ":", correct, "correct")
         correctCounts[maximumDepth] = correct
-    bestMaxDepth = correctCounts.index(max(correctCounts))
-    print(bestMaxDepth)
+    # best maximum depth is the first one to have the highest accuracy overall
+    bestMaxDepth = correctCounts.index(max(correctCounts)) 
     featureNames = ['x', 'y']
     dataPoints = readData(fileName)
     root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=bestMaxDepth, binCount=BINCOUNT, featureList=featureNames)
@@ -250,9 +246,9 @@ for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthe
         total += 1
     print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
 plt.suptitle('Plots With Cross-Validation')
-# plt.show()
 plt.savefig(r'media/cross-validated-plots.png')
 
+# create tree for Pokemon data
 featureNames = None
 dataPoints, featureNames = readData(r'data/pokemonAppended.csv', True)
 root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=3, binCount=BINCOUNT, featureList=featureNames)
