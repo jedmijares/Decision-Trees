@@ -157,6 +157,7 @@ def plot(points, rootNode, subplot = False, plotIndex = 0):
 
 def readData(filename, hasHeader = False):
     dataPoints = []
+    features = None
     # https://realpython.com/python-csv/
     with open(filename) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -168,6 +169,9 @@ def readData(filename, hasHeader = False):
             # print(row)
             newPoint = row
             for i in range(len(newPoint)):
+                # if (hasHeader): # Generation data is treated differently
+                #     if (features[i] == "Generation"):
+                #         newPoint[i] = float(newPoint[i])
                 if (newPoint[i] == '0') | (newPoint[i] == 'FALSE'):
                     newPoint[i] = False
                 elif (newPoint[i] == '1') | (newPoint[i] == 'TRUE'):
@@ -181,11 +185,13 @@ def readData(filename, hasHeader = False):
         return dataPoints, features
     return dataPoints
 
+BINCOUNT = 6
+
 plotIndex = 1
 for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthetic-3.csv', r'data/synthetic-4.csv']:
     featureNames = ['x', 'y']
     dataPoints = readData(fileName)
-    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=3, binCount=8, featureList=featureNames)
+    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=3, binCount=BINCOUNT, featureList=featureNames)
     subplot = plot(dataPoints, root, True, plotIndex)
     subplot.set_title(fileName)
     plotIndex += 1
@@ -198,9 +204,11 @@ for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthe
             correct += 1
         total += 1
     print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
-# fig.suptitle()
-plt.show()
-
+plt.suptitle("Plots")
+# plt.show()
+plt.savefig(r'media/plots.png')
+plt.close()
+# create trees with cross-validation
 random.seed(4) # set seed for repeatability
 foldSize = 50
 plotIndex = 1
@@ -215,7 +223,7 @@ for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthe
         for i in range(int(len(dataPoints)/foldSize)):
             foldPoints = dataPoints.copy()
             del foldPoints[i*foldSize:(i+1)*foldSize]
-            root = ID3(foldPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=maximumDepth, binCount=8, featureList=featureNames)
+            root = ID3(foldPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=maximumDepth, binCount=BINCOUNT, featureList=featureNames)
             # check accuracy by testing the removed points
             for point in dataPoints[i*foldSize:(i+1)*foldSize]:
                 if predict(root, point) == point[len(dataPoints[0]) - 1]:
@@ -227,30 +235,7 @@ for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthe
     print(bestMaxDepth)
     featureNames = ['x', 'y']
     dataPoints = readData(fileName)
-    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=bestMaxDepth, binCount=6, featureList=featureNames)
-        # # print(RenderTree(root))
-        # print(root.depth)
-        # print(root.values)
-        # if root.feature != None:
-        #     print(featureNames[root.feature])
-        # print(root.label)
-        # print("---------")
-        # for child in root.children:
-        #     print("-", child.depth)
-        #     print("-", child.values)
-        #     # print("-", child.feature)
-        #     if child.feature != None:
-        #         print("-", featureNames[child.feature])
-        #     print("-", child.label)
-        #     print("---------")
-        #     for kiddo in child.children:
-        #         print("--", kiddo.depth)
-        #         print("--", kiddo.values)
-        #         # print("--", kiddo.feature)
-        #         if kiddo.feature != None:
-        #             print("--", featureNames[kiddo.feature])
-        #         print("--", kiddo.label)
-        #         print("---------")
+    root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=bestMaxDepth, binCount=BINCOUNT, featureList=featureNames)
 
     subplot = plot(dataPoints, root, True, plotIndex)
     subplot.set_title(fileName)
@@ -264,12 +249,22 @@ for fileName in [r'data/synthetic-1.csv', r'data/synthetic-2.csv', r'data/synthe
             correct += 1
         total += 1
     print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
-# fig.suptitle()
-plt.show()
+plt.suptitle('Plots With Cross-Validation')
+# plt.show()
+plt.savefig(r'media/cross-validated-plots.png')
 
+featureNames = None
+dataPoints, featureNames = readData(r'data/pokemonAppended.csv', True)
+root = ID3(dataPoints, len(dataPoints[0]) - 1, list(range(len(dataPoints[0]) - 1)), 0, maxDepth=3, binCount=BINCOUNT, featureList=featureNames)
 
-# dataPoints, featureNames = readData(r'data/pokemonAppended2.csv', True)
-
+# check accuracy
+correct = 0
+total = 0
+for point in dataPoints:
+    if predict(root, point) == point[len(dataPoints[0]) - 1]:
+        correct += 1
+    total += 1
+print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
 
 # # print(RenderTree(root))
 # print(root.depth)
@@ -318,12 +313,3 @@ plt.show()
 #                         print("-----", featureNames[infant.feature])
 #                     print("-----", infant.label)
 #                     print("---------")
-
-# # check accuracy
-# correct = 0
-# total = 0
-# for point in dataPoints:
-#     if predict(root, point) == point[len(dataPoints[0]) - 1]:
-#         correct += 1
-#     total += 1
-# print(correct, "/", total, "=", float(correct)/total*100, "% accuracy")
