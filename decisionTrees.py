@@ -1,9 +1,14 @@
+# Gerard (Jed) Mijares
+# Machine Learning
+# Fall 2020
+# Decision Trees
+
 import csv
 from statistics import mode # get most common values
 from math import log2
 import numpy as np
 import matplotlib.pyplot as plt # python -m pip install -U matplotlib
-import random
+import random # for randomness during cross-validation
 
 # node class for use in decision tree
 class MyNode:
