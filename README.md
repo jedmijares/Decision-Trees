@@ -30,4 +30,5 @@ The same general process is used to construct this tree, though I made a few adj
 
 ## Notes
 Though it is typically good practice not to test on training data, for the purpose of this assignment, I do so.
+
 While discretization is typically a pre-processing step, in this script I discretize the data into bins as I create the tree.
